@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rima Surya Pratama - Sales Performance Dashboard</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        perf: {
+                            high: '#10b981', // Hijau
+                            mid: '#f59e0b',  // Kuning
+                            low: '#ef4444'   // Merah
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .dark .glass {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-navy-900 dark:bg-navy-950 dark:text-slate-100 font-sans min-h-screen antialiased">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 w-full glass shadow-sm transition-all duration-300">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="text-center sm:text-left">
+                <h1 class="text-xl sm:text-2xl font-extrabold font-poppins tracking-wider text-navy-900 dark:text-white">RIMA SURYA PRATAMA</h1>
+                <p class="text-xs sm:text-sm font-semibold tracking-widest text-blue-600 dark:text-blue-400">SALES PERFORMANCE DASHBOARD</p>
+                <p class="text-[11px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded uppercase mt-1 inline-block border border-blue-200 dark:border-blue-800">Periode: Jan - Mei 2026</p>
+            </div>
+            
+            <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end">
+                <div class="relative w-full sm:w-64">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="tableSearch" onkeyup="filterTable()" placeholder="Cari marketing..." class="w-full pl-9 pr-4 py-2 text-sm bg-white/80 dark:bg-navy-800/80 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium">
+                </div>
+                
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-white/80 dark:bg-navy-800/80 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-yellow-400 hover:scale-105 transition-all shadow-sm">
+                    <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 transition-opacity duration-500 opacity-0" id="mainContent">
+        
+        <!-- SECTION 1: EXECUTIVE SUMMARY -->
+        <section>
+            <h2 class="text-lg font-bold font-poppins mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-blue-500"></i> Executive Summary</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="kpiContainer">
+                <!-- KPI Cards Rendered Here -->
+            </div>
+        </section>
+
+        <!-- SECTION 2 & 3 CONTAINER -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <!-- SECTION 2: OVERALL LEADERBOARD -->
+            <section class="xl:col-span-2">
+                <h2 class="text-lg font-bold font-poppins mb-4 flex items-center gap-2"><i class="fa-solid fa-trophy text-amber-500"></i> Overall Leaderboard (Top 3)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="leaderboardContainer">
+                    <!-- Leaderboard Columns Rendered Here -->
+                </div>
+            </section>
+
+            <!-- SECTION 3: HALL OF FAME -->
+            <section class="xl:col-span-1">
+                <h2 class="text-lg font-bold font-poppins mb-4 flex items-center gap-2"><i class="fa-solid fa-crown text-purple-500"></i> Hall of Fame</h2>
+                <div class="glass rounded-2xl p-5 h-[calc(100%-2rem)] flex flex-col justify-between space-y-4" id="hallOfFameContainer">
+                    <!-- Hall of Fame Rendered Here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- SECTION 4: LEADERBOARD BULANAN -->
+        <section>
+            <h2 class="text-lg font-bold font-poppins mb-4 flex items-center gap-2"><i class="fa-solid fa-calendar-days text-indigo-500"></i> Leaderboard Bulanan</h2>
+            <div class="glass rounded-2xl p-4 sm:p-6 shadow-sm">
+                <div class="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-3" id="monthTabsHeader"></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6" id="monthTabsContent"></div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: TABEL UTAMA -->
+        <section>
+            <h2 class="text-lg font-bold font-poppins mb-4 flex items-center gap-2"><i class="fa-solid fa-table text-teal-500"></i> Tabel Utama Performa</h2>
+            <div class="glass rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-gray-700">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse whitespace-nowrap" id="mainPerformanceTable">
+                        <thead>
+                            <tr class="bg-navy-900 text-white text-[11px] sm:text-xs font-poppins font-semibold uppercase tracking-wider">
+                                <th class="py-4 px-4 border-r border-white/10">Marketing</th>
+                                <th class="py-4 px-4 text-right">Target Bulan</th>
+                                <th class="py-4 px-4 text-right border-r border-white/10">Target Tahun</th>
+                                <th class="py-4 px-4 text-right">Total Omset</th>
+                                <th class="py-4 px-4 text-right border-r border-white/10">Total Profit</th>
+                                <th class="py-4 px-4 text-center w-32 border-r border-white/10">Achievement %</th>
+                                <th class="py-4 px-4 text-center w-32 border-r border-white/10">Margin %</th>
+                                <th class="py-4 px-4 text-center border-r border-white/10">Score</th>
+                                <th class="py-4 px-3 text-center" title="Rank Target">R.Target</th>
+                                <th class="py-4 px-3 text-center" title="Rank Profit">R.Profit</th>
+                                <th class="py-4 px-3 text-center border-r border-white/10" title="Rank Overall">R.Overall</th>
+                                <th class="py-4 px-4 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-[11px] sm:text-[13px] font-medium" id="mainTableBody">
+                            <!-- Rows Rendered Here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: GRAFIK ANALISIS -->
+        <section>
+            <h2 class="text-lg font-bold font-poppins mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-500"></i> Grafik Analisis</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Chart 1 -->
+                <div class="glass rounded-2xl p-4 shadow-sm min-h-[320px] flex flex-col">
+                    <h3 class="text-sm font-bold font-poppins mb-3 text-gray-700 dark:text-gray-300">1. Achievement Target % (Ranking Utama)</h3>
+                    <div class="flex-1 relative min-h-[250px]"><canvas id="chartAchievementBar"></canvas></div>
+                </div>
+                <!-- Chart 2 -->
+                <div class="glass rounded-2xl p-4 shadow-sm min-h-[320px] flex flex-col">
+                    <h3 class="text-sm font-bold font-poppins mb-3 text-gray-700 dark:text-gray-300">2. Total Profit per Marketing</h3>
+                    <div class="flex-1 relative min-h-[250px]"><canvas id="chartProfitBar"></canvas></div>
+                </div>
+                <!-- Chart 3 -->
+                <div class="glass rounded-2xl p-4 shadow-sm min-h-[320px] flex flex-col">
+                    <h3 class="text-sm font-bold font-poppins mb-3 text-gray-700 dark:text-gray-300">3. Profit Margin per Marketing</h3>
+                    <div class="flex-1 relative min-h-[250px]"><canvas id="chartMarginBar"></canvas></div>
+                </div>
+                <!-- Chart 4 -->
+                <div class="glass rounded-2xl p-4 shadow-sm min-h-[320px] flex flex-col">
+                    <h3 class="text-sm font-bold font-poppins mb-3 text-gray-700 dark:text-gray-300">4. Trend Achievement Target Perusahaan</h3>
+                    <div class="flex-1 relative min-h-[250px]"><canvas id="chartAchievementTrendLine"></canvas></div>
+                </div>
+                <!-- Chart 5 -->
+                <div class="glass rounded-2xl p-4 shadow-sm min-h-[320px] flex flex-col">
+                    <h3 class="text-sm font-bold font-poppins mb-3 text-gray-700 dark:text-gray-300">5. Trend Profit Perusahaan</h3>
+                    <div class="flex-1 relative min-h-[250px]"><canvas id="chartProfitTrendLine"></canvas></div>
+                </div>
+                <!-- Chart 6 -->
+                <div class="glass rounded-2xl p-4 shadow-sm min-h-[320px] flex flex-col">
+                    <h3 class="text-sm font-bold font-poppins mb-3 text-gray-700 dark:text-gray-300">6. Kuadran Efisiensi (Bubble = Total Profit)</h3>
+                    <div class="flex-1 relative min-h-[250px]"><canvas id="chartScatterEfisiensi"></canvas></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Data Configuration
+        const monthlyTargetConfig = {
+            "Office": 3750000000,
+            "Ade Yudha": 1250000000,
+            "Wahyu": 820000000,
+            "Galih": 700000000,
+            "Daud": 500000000,
+            "Purwanto": 500000000,
+            "Ade Bandung": 500000000,
+            "Tri&Grs": 500000000,
+            "Wahyudin": 200000000
+        };
+
+        const rawSalesData = [
+            { name: "Office", months: { "Januari": { omset: 3777124801, modal: 3613619312 }, "Februari": { omset: 3926601697, modal: 3755488097 }, "Maret": { omset: 2570095104, modal: 2434866843 }, "April": { omset: 4904526223, modal: 4722729898 }, "Mei": { omset: 4307641298, modal: 3765268088 } } },
+            { name: "Purwanto", months: { "Januari": { omset: 485606877, modal: 464990083 }, "Februari": { omset: 369352891, modal: 353310362 }, "Maret": { omset: 683927465, modal: 662171526 }, "April": { omset: 904148399, modal: 854745104 }, "Mei": { omset: 847158941, modal: 810333907 } } },
+            { name: "Wahyu", months: { "Januari": { omset: 643240648, modal: 489392193 }, "Februari": { omset: 628358984, modal: 484167291 }, "Maret": { omset: 628343420, modal: 466468875 }, "April": { omset: 675145223, modal: 514779557 }, "Mei": { omset: 686916476, modal: 508606183 } } },
+            { name: "Ade Yudha", months: { "Januari": { omset: 1100140883, modal: 921343994 }, "Februari": { omset: 1018376663, modal: 852109902 }, "Maret": { omset: 1103237044, modal: 921795450 }, "April": { omset: 1275513946, modal: 1050312274 }, "Mei": { omset: 1701902753, modal: 1237661338 } } },
+            { name: "Galih", months: { "Januari": { omset: 700742622, modal: 599498578 }, "Februari": { omset: 635314342, modal: 531697935 }, "Maret": { omset: 684159233, modal: 583415204 }, "April": { omset: 766843277, modal: 646461901 }, "Mei": { omset: 805036300, modal: 618648813 } } },
+            { name: "Daud", months: { "Januari": { omset: 438603453, modal: 376393402 }, "Februari": { omset: 467519415, modal: 406539893 }, "Maret": { omset: 356941673, modal: 303120698 }, "April": { omset: 558817377, modal: 489097558 }, "Mei": { omset: 552073494, modal: 427846129 } } },
+            { name: "Wahyudin", months: { "Januari": { omset: 200890954, modal: 171848098 }, "Februari": { omset: 211988639, modal: 179514536 }, "Maret": { omset: 174789270, modal: 143630494 }, "April": { omset: 249737606, modal: 210348278 }, "Mei": { omset: 210393754, modal: 165763344 } } },
+            { name: "Ade Bandung", months: { "Januari": { omset: 304683662, modal: 269413660 }, "Februari": { omset: 297811671, modal: 261472365 }, "Maret": { omset: 273323452, modal: 239437560 }, "April": { omset: 367502340, modal: 318038997 }, "Mei": { omset: 405739513, modal: 286947276 } } },
+            { name: "Tri&Grs", months: { "Januari": { omset: 514792256, modal: 437312301 }, "Februari": { omset: 560756430, modal: 473870251 }, "Maret": { omset: 491727714, modal: 414953446 }, "April": { omset: 647627901, modal: 560083549 }, "Mei": { omset: 543875930, modal: 443748615 } } }
+        ];
+
+        const listMonths = ["Januari", "Februari", "Maret", "April", "Mei"];
+        let calculatedMarketingData = [];
+        let globalSummary = {};
+        let monthlyLeaderboardData = {}; 
+        let activeMonthTab = "Januari";
+        let activeCharts = {};
+
+        // 1. DATA PROCESSING ENGINE
+        function processDataEngine() {
+            // A. Aggregate raw data first
+            let rawSummaryList = rawSalesData.map(m => {
+                let targetBulanan = monthlyTargetConfig[m.name];
+                let targetYTD = targetBulanan * 5;
+                let totalOmset = 0;
+                let totalProfit = 0;
+                
+                listMonths.forEach(mo => {
+                    let o = m.months[mo].omset;
+                    let p = o - m.months[mo].modal;
+                    totalOmset += o;
+                    totalProfit += p;
+                });
+                
+                let achievement = (totalOmset / targetYTD) * 100;
+                let margin = totalOmset > 0 ? (totalProfit / totalOmset) * 100 : 0;
+                
+                return { name: m.name, targetBulanan, targetYTD, totalOmset, totalProfit, achievement, margin };
+            });
+
+            // B. Find Max Values for Normalized Score Weighting
+            let maxAchievementAll = Math.max(...rawSummaryList.map(x => x.achievement));
+            let maxProfitAll = Math.max(...rawSummaryList.map(x => x.totalProfit));
+            let maxMarginAll = Math.max(...rawSummaryList.map(x => x.margin));
+
+            // C. Calculate Scores & Complete Object
+            calculatedMarketingData = rawSummaryList.map(m => {
+                let achScore = (m.achievement / maxAchievementAll) * 100;
+                let profScore = (m.totalProfit / maxProfitAll) * 100;
+                let margScore = (m.margin / maxMarginAll) * 100;
+                
+                // Formula: 50% Achievement, 30% Profit, 20% Margin
+                let performanceScore = (0.5 * achScore) + (0.3 * profScore) + (0.2 * margScore);
+                
+                return {
+                    name: m.name,
+                    targetBulanan: m.targetBulanan,
+                    targetTahunan: m.targetBulanan * 12,
+                    targetYTD: m.targetYTD,
+                    totalOmset: m.totalOmset,
+                    totalProfit: m.totalProfit,
+                    profitMargin: m.margin,
+                    achievementTarget: m.achievement,
+                    performanceScore: performanceScore
+                };
+            });
+
+            // D. Calculate Individual Rankings
+            let sortedByAch = [...calculatedMarketingData].sort((a,b) => b.achievementTarget - a.achievementTarget);
+            let sortedByProf = [...calculatedMarketingData].sort((a,b) => b.totalProfit - a.totalProfit);
+            let sortedByPerf = [...calculatedMarketingData].sort((a,b) => b.performanceScore - a.performanceScore);
+
+            calculatedMarketingData = calculatedMarketingData.map(m => {
+                return {
+                    ...m,
+                    rankAchievement: sortedByAch.findIndex(x => x.name === m.name) + 1,
+                    rankProfit: sortedByProf.findIndex(x => x.name === m.name) + 1,
+                    rankOverall: sortedByPerf.findIndex(x => x.name === m.name) + 1
+                };
+            });
+            // Main array sorted by Overall Performance for the table
+            calculatedMarketingData.sort((a, b) => a.rankOverall - b.rankOverall);
+
+            // E. Monthly Calculations
+            listMonths.forEach(mo => {
+                let monthList = rawSalesData.map(m => {
+                    let target = monthlyTargetConfig[m.name];
+                    let o = m.months[mo].omset;
+                    let p = o - m.months[mo].modal;
+                    let mar = o > 0 ? (p / o) * 100 : 0;
+                    let ach = (o / target) * 100;
+                    return { name: m.name, profit: p, margin: mar, achievement: ach };
+                });
+
+                monthlyLeaderboardData[mo] = {
+                    achievement: [...monthList].sort((a,b) => b.achievement - a.achievement),
+                    profit: [...monthList].sort((a,b) => b.profit - a.profit),
+                    margin: [...monthList].sort((a,b) => b.margin - a.margin)
+                };
+            });
+
+            // F. Global Summaries
+            let rajaTarget = sortedByAch[0];
+            let rajaProfit = sortedByProf[0];
+            let rajaMargin = [...calculatedMarketingData].sort((a,b) => b.profitMargin - a.profitMargin)[0];
+            let mvpSales = sortedByPerf[0];
+
+            let grandTotalOmset = calculatedMarketingData.reduce((acc, curr) => acc + curr.totalOmset, 0);
+            let grandTotalProfit = calculatedMarketingData.reduce((acc, curr) => acc + curr.totalProfit, 0);
+            let grandTotalTargetYTD = calculatedMarketingData.reduce((acc, curr) => acc + curr.targetYTD, 0);
+            let grandMargin = (grandTotalOmset > 0) ? (grandTotalProfit / grandTotalOmset) * 100 : 0;
+            let grandAchievement = (grandTotalOmset / grandTotalTargetYTD) * 100;
+
+            globalSummary = {
+                grandTotalOmset, grandTotalProfit, grandMargin, grandAchievement,
+                rajaTarget: rajaTarget.name,
+                rajaTargetVal: rajaTarget.achievementTarget,
+                rajaProfit: rajaProfit.name,
+                rajaProfitVal: rajaProfit.totalProfit,
+                rajaMargin: rajaMargin.name,
+                rajaMarginVal: rajaMargin.profitMargin,
+                mvpSales: mvpSales.name,
+                maxProfitAll // Stored for Bubble Chart calculation
+            };
+        }
+
+        // Helpers
+        function formatIDR(num) {
+            if (num >= 1e9) return 'Rp ' + (num / 1e9).toFixed(2) + ' M';
+            if (num >= 1e6) return 'Rp ' + (num / 1e6).toFixed(1) + ' Jt';
+            return 'Rp ' + num.toLocaleString('id-ID');
+        }
+        function getPerfColor(val) { return val >= 100 ? 'bg-perf-high' : val >= 80 ? 'bg-perf-mid' : 'bg-perf-low'; }
+        function getPerfText(val) { return val >= 100 ? 'text-perf-high' : val >= 80 ? 'text-perf-mid' : 'text-perf-low'; }
+        function getStatus(val) { return val >= 100 ? 'HIGH' : val >= 80 ? 'MID' : 'LOW'; }
+
+        // 2. RENDER UI
+        function renderDashboardDOM() {
+            // Section 1: KPI Summary
+            const kpiContainer = document.getElementById('kpiContainer');
+            const kpis = [
+                { title: "Achievement Target YTD", val: globalSummary.grandAchievement.toFixed(1) + "%", desc: "Pencapaian Seluruh Perusahaan", icon: "fa-bullseye text-blue-500" },
+                { title: "Total Profit Jan-Mei", val: formatIDR(globalSummary.grandTotalProfit), desc: "Akumulasi Keuntungan Perusahaan", icon: "fa-money-bill-trend-up text-emerald-500" },
+                { title: "Profit Margin Rata-rata", val: globalSummary.grandMargin.toFixed(2) + "%", desc: "Tingkat Efisiensi Keseluruhan", icon: "fa-percent text-indigo-500" },
+                { title: "Total Omset Jan-Mei", val: formatIDR(globalSummary.grandTotalOmset), desc: "Volume Penjualan Bruto", icon: "fa-wallet text-gray-500" },
+                
+                { title: "🎯 Raja Target", val: globalSummary.rajaTarget, desc: `${globalSummary.rajaTargetVal.toFixed(1)}% Achievement`, icon: "fa-crosshairs text-blue-500" },
+                { title: "💰 Raja Profit", val: globalSummary.rajaProfit, desc: `${formatIDR(globalSummary.rajaProfitVal)} Keuntungan`, icon: "fa-sack-dollar text-green-500" },
+                { title: "⚡ Raja Margin", val: globalSummary.rajaMargin, desc: `${globalSummary.rajaMarginVal.toFixed(1)}% Rasio Profit`, icon: "fa-bolt text-cyan-500" },
+                { title: "🏆 MVP Sales 2026", val: globalSummary.mvpSales, desc: "Peringkat #1 Keseluruhan", icon: "fa-star text-purple-500" }
+            ];
+            
+            kpiContainer.innerHTML = kpis.map(k => `
+                <div class="glass rounded-2xl p-5 shadow-sm hover:scale-[1.02] transition-transform duration-300 flex items-center justify-between">
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">${k.title}</p>
+                        <p class="text-xl font-bold font-poppins text-navy-900 dark:text-white">${k.val}</p>
+                        <p class="text-[11px] font-medium text-gray-400 dark:text-gray-500">${k.desc}</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-white/60 dark:bg-navy-800/60 shadow-inner text-xl">
+                        <i class="fa-solid ${k.icon}"></i>
+                    </div>
+                </div>
+            `).join('');
+
+            // Section 2: Leaderboard
+            const leaderboardContainer = document.getElementById('leaderboardContainer');
+            let topAch = [...calculatedMarketingData].sort((a,b)=>b.achievementTarget - a.achievementTarget).slice(0,3);
+            let topProf = [...calculatedMarketingData].sort((a,b)=>b.totalProfit - a.totalProfit).slice(0,3);
+            let topPerf = [...calculatedMarketingData].sort((a,b)=>b.performanceScore - a.performanceScore).slice(0,3);
+            const medals = ["🥇", "🥈", "🥉"];
+            
+            function buildMiniLB(title, data, valKey, isCurr, suffix="") {
+                return `
+                    <div class="glass rounded-2xl p-4 shadow-sm space-y-3 border-t-4 border-t-blue-500/80">
+                        <h3 class="text-[11px] font-extrabold uppercase font-poppins tracking-wider border-b border-gray-200 dark:border-gray-700 pb-2 text-center text-blue-700 dark:text-blue-400">${title}</h3>
+                        <div class="space-y-2">
+                            ${data.map((m, idx) => `
+                                <div class="flex items-center justify-between p-2 rounded-xl bg-white/50 dark:bg-navy-800/50 text-xs sm:text-sm shadow-sm border border-white/20 dark:border-white/5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-lg">${medals[idx]}</span>
+                                        <span class="font-bold text-gray-700 dark:text-gray-200">${m.name}</span>
+                                    </div>
+                                    <span class="font-bold font-poppins ${isCurr ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'}">${isCurr ? formatIDR(m[valKey]) : m[valKey].toFixed(1) + suffix}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            leaderboardContainer.innerHTML = 
+                buildMiniLB("TOP ACHIEVEMENT TARGET", topAch, "achievementTarget", false, "%") +
+                buildMiniLB("TOP PROFIT", topProf, "totalProfit", true) +
+                buildMiniLB("TOP OVERALL PERFORMANCE", topPerf, "performanceScore", false);
+
+            // Section 3: Hall of Fame
+            const hofContainer = document.getElementById('hallOfFameContainer');
+            hofContainer.innerHTML = `
+                <div class="text-center pb-2 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="font-poppins font-extrabold text-[12px] tracking-widest text-purple-600 dark:text-purple-400 uppercase">✨ ELITE HALL OF FAME ✨</h3>
+                </div>
+                <div class="space-y-3 flex-1 flex flex-col justify-around">
+                    <div class="flex items-center gap-3">
+                        <div class="text-xl p-2.5 bg-blue-100 dark:bg-blue-900/50 rounded-xl shadow-inner border border-blue-200 dark:border-blue-800">🎯</div>
+                        <div><p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Raja Target</p><p class="text-sm font-bold text-navy-900 dark:text-white">${globalSummary.rajaTarget}</p></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-xl p-2.5 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl shadow-inner border border-emerald-200 dark:border-emerald-800">💰</div>
+                        <div><p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Raja Profit</p><p class="text-sm font-bold text-navy-900 dark:text-white">${globalSummary.rajaProfit}</p></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-xl p-2.5 bg-cyan-100 dark:bg-cyan-900/50 rounded-xl shadow-inner border border-cyan-200 dark:border-cyan-800">⚡</div>
+                        <div><p class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Raja Margin</p><p class="text-sm font-bold text-navy-900 dark:text-white">${globalSummary.rajaMargin}</p></div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-600/10 to-indigo-600/10 border border-purple-500/30 rounded-xl shadow-sm">
+                        <div class="text-2xl p-2 bg-purple-100 dark:bg-purple-900/50 rounded-xl">👑</div>
+                        <div>
+                            <p class="text-[11px] uppercase tracking-wider font-extrabold text-purple-600 dark:text-purple-400">MVP SALES 2026</p>
+                            <p class="text-[16px] font-extrabold text-purple-700 dark:text-purple-300 font-poppins">${globalSummary.mvpSales}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Section 4 Tabs Header
+            const monthTabsHeader = document.getElementById('monthTabsHeader');
+            monthTabsHeader.innerHTML = listMonths.map(m => `
+                <button onclick="switchMonthTab('${m}')" id="btnTab-${m}" class="px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all ${m === activeMonthTab ? 'bg-blue-600 text-white shadow-md' : 'bg-white/60 dark:bg-navy-800/60 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-navy-700'}">
+                    ${m}
+                </button>
+            `).join('');
+            renderMonthTabContent();
+
+            // Section 5: Main Table
+            const mainTableBody = document.getElementById('mainTableBody');
+            mainTableBody.innerHTML = calculatedMarketingData.map(m => `
+                <tr class="hover:bg-white/50 dark:hover:bg-navy-800/50 transition-colors duration-150 group">
+                    <td class="py-3.5 px-4 font-poppins font-bold text-navy-900 dark:text-white border-r border-gray-200/50 dark:border-gray-700/50 group-hover:bg-blue-50/50 dark:group-hover:bg-blue-900/10">${m.name}</td>
+                    <td class="py-3.5 px-4 text-right text-gray-500 dark:text-gray-400 font-mono">${m.targetBulanan.toLocaleString('id-ID')}</td>
+                    <td class="py-3.5 px-4 text-right text-gray-500 dark:text-gray-400 font-mono border-r border-gray-200/50 dark:border-gray-700/50">${m.targetTahunan.toLocaleString('id-ID')}</td>
+                    <td class="py-3.5 px-4 text-right font-medium font-mono">${m.totalOmset.toLocaleString('id-ID')}</td>
+                    <td class="py-3.5 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400 font-mono border-r border-gray-200/50 dark:border-gray-700/50">${m.totalProfit.toLocaleString('id-ID')}</td>
+                    
+                    <!-- Ach. Target Bar -->
+                    <td class="py-3.5 px-4 border-r border-gray-200/50 dark:border-gray-700/50 bg-blue-50/30 dark:bg-blue-900/5">
+                        <div class="flex items-center justify-between text-[11px] mb-1"><span class="font-bold font-poppins text-blue-700 dark:text-blue-300">${m.achievementTarget.toFixed(1)}%</span></div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden"><div class="${getPerfColor(m.achievementTarget)} h-1.5 rounded-full" style="width: ${Math.min(m.achievementTarget, 100)}%"></div></div>
+                    </td>
+                    
+                    <!-- Profit Margin Bar -->
+                    <td class="py-3.5 px-4 border-r border-gray-200/50 dark:border-gray-700/50">
+                        <div class="flex items-center justify-between text-[11px] mb-1"><span class="font-bold">${m.profitMargin.toFixed(1)}%</span></div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden"><div class="${getPerfColor(m.profitMargin)} h-1.5 rounded-full" style="width: ${Math.min(m.profitMargin * 3, 100)}%"></div></div>
+                    </td>
+                    
+                    <td class="py-3.5 px-4 text-center font-poppins font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50/30 dark:bg-purple-900/10 border-r border-gray-200/50 dark:border-gray-700/50">${m.performanceScore.toFixed(1)}</td>
+                    <td class="py-3.5 px-3 text-center text-gray-500 font-bold">${m.rankAchievement}</td>
+                    <td class="py-3.5 px-3 text-center text-gray-500 font-bold">${m.rankProfit}</td>
+                    <td class="py-3.5 px-3 text-center border-r border-gray-200/50 dark:border-gray-700/50 font-poppins font-extrabold text-navy-900 dark:text-white bg-amber-50/30 dark:bg-amber-900/10">${m.rankOverall}</td>
+                    <td class="py-3.5 px-4 text-center">
+                        <span class="px-2 py-1 rounded-[4px] text-[10px] font-bold tracking-widest ${getPerfText(m.achievementTarget)} bg-white/80 dark:bg-navy-900/80 shadow-sm border border-current">
+                            ${getStatus(m.achievementTarget)}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Initiate Charts
+            initChartJS();
+            document.getElementById('mainContent').classList.remove('opacity-0');
+        }
+
+        // Section 4 Tabs Engine
+        function switchMonthTab(mo) {
+            listMonths.forEach(m => {
+                const btn = document.getElementById(`btnTab-${m}`);
+                if(m === mo) {
+                    btn.className = "px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all bg-blue-600 text-white shadow-md";
+                } else {
+                    btn.className = "px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all bg-white/60 dark:bg-navy-800/60 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-navy-700";
+                }
+            });
+            activeMonthTab = mo;
+            renderMonthTabContent();
+        }
+
+        function renderMonthTabContent() {
+            const container = document.getElementById('monthTabsContent');
+            const data = monthlyLeaderboardData[activeMonthTab];
+            const meds = ["🥇", "🥈", "🥉", "4", "5", "6", "7", "8", "9"];
+
+            function buildListHTML(title, list, valKey, isCurr, suffix="") {
+                return `
+                    <div class="space-y-3 bg-white/40 dark:bg-navy-900/40 p-4 rounded-xl border border-gray-200/50 dark:border-gray-800/50">
+                        <p class="text-[11px] font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-1.5 uppercase font-poppins tracking-wider">${title}</p>
+                        <div class="space-y-1.5">
+                            ${list.map((item, i) => `
+                                <div class="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg ${i < 3 ? 'bg-blue-500/10 font-bold border border-blue-500/10' : 'font-medium'}">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-5 text-center text-sm">${i < 3 ? meds[i] : (i+1)+'.'}</span>
+                                        <span>${item.name}</span>
+                                    </div>
+                                    <span class="font-mono font-bold ${i < 3 ? 'text-blue-600 dark:text-blue-400' : ''}">${isCurr ? formatIDR(item[valKey]) : item[valKey].toFixed(1) + suffix}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = 
+                buildListHTML("Rank Achievement Target (%)", data.achievement, "achievement", false, "%") +
+                buildListHTML("Rank Profit Bulanan", data.profit, "profit", true) +
+                buildListHTML("Rank Margin Profit (%)", data.margin, "margin", false, "%");
+        }
+
+        // Live Search Filter Table
+        function filterTable() {
+            const input = document.getElementById("tableSearch");
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById("mainPerformanceTable");
+            const tr = table.getElementsByTagName("tr");
+            for (let i = 1; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName("td")[0]; // Kolom Marketing
+                if (td) {
+                    let txtValue = td.textContent || td.innerText;
+                    tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+                }       
+            }
+        }
+
+        // 3. CHART ENGINE (Updated for new methodology)
+        function initChartJS() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const tClr = isDark ? '#94a3b8' : '#475569';
+            const gClr = isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(71, 85, 105, 0.08)';
+
+            const chartOpts = {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: tClr, font: { family: 'Inter', size: 10 } } } },
+                scales: {
+                    x: { grid: { color: gClr }, ticks: { color: tClr, font: { size: 9 } } },
+                    y: { grid: { color: gClr }, ticks: { color: tClr, font: { size: 9 } } }
+                }
+            };
+
+            const labelsMkt = calculatedMarketingData.map(m => m.name);
+
+            // Clear old charts
+            Object.keys(activeCharts).forEach(k => { if(activeCharts[k]) activeCharts[k].destroy(); });
+
+            // Chart 1: Achievement Target (Bar)
+            activeCharts.achBar = new Chart(document.getElementById('chartAchievementBar').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labelsMkt,
+                    datasets: [{ label: 'Achievement Target % (Jan-Mei)', data: calculatedMarketingData.map(m => m.achievementTarget), backgroundColor: '#3b82f6', borderRadius: 6 }]
+                },
+                options: chartOpts
+            });
+
+            // Chart 2: Total Profit (Bar)
+            activeCharts.profBar = new Chart(document.getElementById('chartProfitBar').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labelsMkt,
+                    datasets: [{ label: 'Total Profit', data: calculatedMarketingData.map(m => m.totalProfit), backgroundColor: '#10b981', borderRadius: 6 }]
+                },
+                options: chartOpts
+            });
+
+            // Chart 3: Profit Margin (Bar)
+            activeCharts.margBar = new Chart(document.getElementById('chartMarginBar').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labelsMkt,
+                    datasets: [{ label: 'Profit Margin %', data: calculatedMarketingData.map(m => m.profitMargin), backgroundColor: '#06b6d4', borderRadius: 6 }]
+                },
+                options: chartOpts
+            });
+
+            // Chart 4 & 5 Trends
+            let coMonthlyTarget = rawSalesData.reduce((acc, curr) => acc + monthlyTargetConfig[curr.name], 0);
+            let coTrendAch = listMonths.map(mo => {
+                let omsetBulanan = rawSalesData.reduce((acc, curr) => acc + curr.months[mo].omset, 0);
+                return (omsetBulanan / coMonthlyTarget) * 100;
+            });
+            let coTrendProf = listMonths.map(mo => rawSalesData.reduce((acc, curr) => acc + (curr.months[mo].omset - curr.months[mo].modal), 0));
+
+            activeCharts.achLine = new Chart(document.getElementById('chartAchievementTrendLine').getContext('2d'), {
+                type: 'line',
+                data: { labels: listMonths, datasets: [{ label: 'Trend Achievement % Perusahaan', data: coTrendAch, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3 }] },
+                options: chartOpts
+            });
+
+            activeCharts.profLine = new Chart(document.getElementById('chartProfitTrendLine').getContext('2d'), {
+                type: 'line',
+                data: { labels: listMonths, datasets: [{ label: 'Trend Profit Perusahaan', data: coTrendProf, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }] },
+                options: chartOpts
+            });
+
+            // Chart 6: Bubble Chart (X=Ach, Y=Margin, Radius=Profit)
+            let bubbleData = calculatedMarketingData.map(m => ({
+                x: m.achievementTarget, 
+                y: m.profitMargin, 
+                r: Math.max(4, (m.totalProfit / globalSummary.maxProfitAll) * 18), // Skala ukuran bubble berdasar profit
+                label: m.name,
+                rawProfit: m.totalProfit
+            }));
+
+            activeCharts.bubbleEfisiensi = new Chart(document.getElementById('chartScatterEfisiensi').getContext('2d'), {
+                type: 'bubble',
+                data: { datasets: [{ label: 'Marketing', data: bubbleData, backgroundColor: 'rgba(139, 92, 246, 0.7)', borderColor: 'rgba(139, 92, 246, 1)', borderWidth: 1 }] },
+                options: {
+                    ...chartOpts,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ctx.raw.label + ': (Ach: ' + ctx.raw.x.toFixed(1) + '%, Margin: ' + ctx.raw.y.toFixed(1) + '%, Profit: Rp ' + (ctx.raw.rawProfit / 1e6).toFixed(0) + ' Jt)';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Achievement Target %', color: tClr, font: { size: 10, weight: 'bold' } }, grid: { color: gClr }, ticks: { color: tClr } },
+                        y: { title: { display: true, text: 'Profit Margin %', color: tClr, font: { size: 10, weight: 'bold' } }, grid: { color: gClr }, ticks: { color: tClr } }
+                    }
+                }
+            });
+        }
+
+        // Dark/Light Mode Theme Setup
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = "fa-solid fa-moon text-lg";
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = "fa-solid fa-sun text-lg text-yellow-400";
+                localStorage.setItem('theme', 'dark');
+            }
+            initChartJS();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeIcon').className = "fa-solid fa-sun text-lg text-yellow-400";
+            }
+            processDataEngine();
+            renderDashboardDOM();
+        });
+    </script>
+</body>
+</html>
